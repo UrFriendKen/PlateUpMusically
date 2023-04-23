@@ -1,8 +1,10 @@
-﻿using KitchenData;
+﻿using Kitchen;
+using KitchenData;
 using KitchenLib;
 using KitchenLib.Event;
 using KitchenLib.References;
 using KitchenMods;
+using PreferenceSystem;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -49,6 +51,8 @@ namespace KitchenMusically
 
         public Main() : base(MOD_GUID, MOD_NAME, MOD_AUTHOR, MOD_VERSION, MOD_GAMEVERSION, Assembly.GetExecutingAssembly()) { }
 
+        internal static PreferenceSystemManager PrefManager;
+
         protected override void OnInitialise()
         {
             LogWarning($"{MOD_GUID} v{MOD_VERSION} in use!");
@@ -63,23 +67,39 @@ namespace KitchenMusically
             LogInfo("Done loading game data.");
         }
 
-        protected override void OnUpdate()
-        {
-        }
-
         protected override void OnPostActivate(KitchenMods.Mod mod)
         {
-            // TODO: Uncomment the following if you have an asset bundle.
-            // TODO: Also, make sure to set EnableAssetBundleDeploy to 'true' in your ModName.csproj
-
-            // LogInfo("Attempting to load asset bundle...");
+            LogInfo("Attempting to load asset bundle...");
             Bundle = mod.GetPacks<AssetBundleModPack>().SelectMany(e => e.AssetBundles).First();
-            // LogInfo("Done loading asset bundle.");
+            LogInfo("Done loading asset bundle.");
 
-            // Register custom GDOs
             // AddGameData();
 
-            // Perform actions when game data is built
+            PrefManager = new PreferenceSystemManager(MOD_GUID, MOD_NAME);
+
+            float[] volumes = new float[] { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1f };
+            string[] volumeStrings = new string[] { "10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%" };
+
+            PrefManager
+                .AddLabel("Musically")
+                .AddSubmenu("Spawn Instruments", "spawnInstruments")
+                    .AddLabel("Spawn Instruments")
+                    .AddButton("Piano", SpawnInstrumentManager.RequestAppliance, arg: ApplianceReferences.Piano)
+                    .AddSpacer()
+                    .AddSpacer()
+                .SubmenuDone()
+                .AddSubmenu("Volume", "volume")
+                    .AddLabel("Piano Volume")
+                    .AddOption<float>("pianoVolume", 0.5f, volumes, volumeStrings)
+                    .AddSpacer()
+                    .AddSpacer()
+                .SubmenuDone()
+                .AddSpacer()
+                .AddSpacer();
+
+            PrefManager.RegisterMenu(PreferenceSystemManager.MenuType.PauseMenu);
+
+
             Events.BuildGameDataEvent += delegate (object s, BuildGameDataEventArgs args)
             {
                 if (args.gamedata.TryGet(ApplianceReferences.Piano, out Appliance piano, warn_if_fail: true) && !HasProperty<CMusicalInstrument>(piano))
