@@ -33,7 +33,7 @@ namespace KitchenMusically
         // Mod Version must follow semver notation e.g. "1.2.3"
         public const string MOD_GUID = "IcedMilo.PlateUp.Musically";
         public const string MOD_NAME = "Musically";
-        public const string MOD_VERSION = "0.1.0";
+        public const string MOD_VERSION = "0.1.2";
         public const string MOD_AUTHOR = "IcedMilo";
         public const string MOD_GAMEVERSION = ">=1.1.5";
         // Game version this mod is designed for in semver
@@ -107,7 +107,6 @@ namespace KitchenMusically
                     piano.Properties.Add(new CMusicalInstrument()
                     {
                         Type = InstrumentType.Piano,
-                        VolumeMultiplier = 1f,
                         ClipCopiesCount = 5
                     });
                 }

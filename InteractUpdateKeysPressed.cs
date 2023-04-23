@@ -8,7 +8,7 @@ namespace KitchenMusically
     public struct CActPressed : IComponentData, IModComponent { }
     public struct CNotifyPressed : IComponentData, IModComponent { }
 
-    public abstract class InteractUpdateKeyState : ItemInteractionSystem, IModSystem
+    public abstract class InteractUpdateKeyState : ItemInteractionSystem
     {
         protected override bool RequirePress => false;
         protected override bool RequireHold => false;

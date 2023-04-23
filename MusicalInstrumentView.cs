@@ -5,6 +5,7 @@ using KitchenMods;
 using MessagePack;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -20,12 +21,17 @@ namespace KitchenMusically
     public struct CMusicalInstrument : IComponentData, IApplianceProperty, IAttachableProperty, IModComponent
     {
         public InstrumentType Type;
-        public float VolumeMultiplier;
         public int ClipCopiesCount;
     }
 
     public class MusicalInstrumentView : UpdatableObjectView<MusicalInstrumentView.ViewData>
     {
+
+        protected readonly Dictionary<InstrumentType, string> VOLUME_PREFERENCE_MAP = new Dictionary<InstrumentType, string>()
+        {
+            { InstrumentType.Piano, "pianoVolume"}
+        };
+
         public class UpdateView : IncrementalViewSystemBase<ViewData>, IModSystem
         {
             private EntityQuery Views;
@@ -57,7 +63,6 @@ namespace KitchenMusically
                         IsGrabPressed = Has<CGrabPressed>(entity),
                         IsActPressed = Has<CActPressed>(entity),
                         IsNotifyPressed = Has<CNotifyPressed>(entity),
-                        VolumeMultiplier = instrument.VolumeMultiplier,
                         Type = instrument.Type,
                         ClipCopiesCount = instrument.ClipCopiesCount
                     };
@@ -75,9 +80,8 @@ namespace KitchenMusically
             [Key(1)] public bool IsGrabPressed;
             [Key(2)] public bool IsActPressed;
             [Key(3)] public bool IsNotifyPressed;
-            [Key(4)] public float VolumeMultiplier;
-            [Key(5)] public InstrumentType Type;
-            [Key(6)] public int ClipCopiesCount;
+            [Key(4)] public InstrumentType Type;
+            [Key(5)] public int ClipCopiesCount;
 
             public IUpdatableObject GetRelevantSubview(IObjectView view)
             {
@@ -112,11 +116,12 @@ namespace KitchenMusically
             }
         }
 
+        private InstrumentType _instrumentType = InstrumentType.None;
+
         private bool _isPlaying = false;
         private List<SoundSource> _soundSources = new List<SoundSource>();
         private int _clipCopiesCount = 0;
         public List<AudioClip> Clips = new List<AudioClip>();
-        private float _volumeMultiplier = 1f;
 
         public GameObject VfxGameObject;
 
@@ -128,7 +133,7 @@ namespace KitchenMusically
         {
             _isPlaying = view_data.IsActPressed;
             _clipCopiesCount = view_data.ClipCopiesCount;
-            _volumeMultiplier = view_data.VolumeMultiplier;
+            _instrumentType = view_data.Type;
         }
 
         void Update()
@@ -169,7 +174,7 @@ namespace KitchenMusically
                 {
                     if (_soundSources[i].IsPlaying)
                         continue;
-                    _soundSources[i].VolumeMultiplier = _volumeMultiplier;
+                    _soundSources[i].VolumeMultiplier = VOLUME_PREFERENCE_MAP.TryGetValue(_instrumentType, out string prefKey)? Main.PrefManager.Get<float>(prefKey) : 0.5f;
                     _soundSources[i].Play();
                     needToPlay = false;
                 }
